@@ -28,7 +28,7 @@ namespace CloudLauncher.Properties {
         [global::System.Configuration.DefaultSettingValueAttribute("")]
         public string Email {
             get {
-                return ((string)(this["Email"]));
+                return "";
             }
             set {
                 this["Email"] = value;
@@ -40,7 +40,7 @@ namespace CloudLauncher.Properties {
         [global::System.Configuration.DefaultSettingValueAttribute("")]
         public string Password {
             get {
-                return ((string)(this["Password"]));
+                return "";
             }
             set {
                 this["Password"] = value;
@@ -52,7 +52,7 @@ namespace CloudLauncher.Properties {
         [global::System.Configuration.DefaultSettingValueAttribute("")]
         public string GamePath {
             get {
-                return ((string)(this["GamePath"]));
+                return "";
             }
             set {
                 this["GamePath"] = value;

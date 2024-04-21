@@ -1,91 +1,54 @@
 #pragma once
-#include <algorithm>
 #include <string>
-#include <sstream>
 #include <string_view>
 
-struct Uri
-{
-private:
-	typedef std::string_view::const_iterator iterator_t;
+struct Uri {
+    public:
+    std::string_view Protocol, Host, Port, Path, QueryString;
 
-public:
-	std::string_view Protocol, Host, Port, Path, QueryString;
+    static Uri Parse(const std::string_view& uri) {
+        Uri result;
 
-	static Uri Parse(const std::string_view& uri)
-	{
-		Uri result;
+        if (uri.empty()) return result;
 
-		if (uri.length() == 0) return result;
+        auto uriEnd = uri.end();
 
-		iterator_t uriEnd = uri.end();
+        auto queryStart = std::find(uri.begin(), uriEnd, '?');
 
-		iterator_t queryStart = std::find(uri.begin(), uriEnd, '?');
+        auto protocolEnd = uri.begin();
+        if (auto protocolStart = std::find(uri.begin(), uriEnd, ':'); protocolStart != uriEnd) {
+            if (auto prot = uri.substr(protocolStart - uri.begin(), 3); prot == "://") {
+                result.Protocol = uri.substr(0, protocolStart - uri.begin());
+                protocolEnd = protocolStart + 3;
+            }
+        }
 
-		iterator_t protocolStart = uri.begin();
-		iterator_t protocolEnd = std::find(protocolStart, uriEnd, ':');
+        auto hostStart = protocolEnd;
+        auto pathStart = std::find(hostStart, uriEnd, '/');
 
-		if (protocolEnd != uriEnd)
-		{
-			std::string_view prot = &*(protocolEnd);
-			if ((prot.length() > 3) && (prot.substr(0, 3) == "://"))
-			{
-				result.Protocol = make_string_view(uri, protocolStart, protocolEnd);
-				protocolEnd += 3;
-			}
-			else protocolEnd = uri.begin();
-		}
-		else protocolEnd = uri.begin();
+        auto hostEnd = std::find(hostStart, (pathStart != uriEnd) ? pathStart : queryStart, ':');
 
-		iterator_t hostStart = protocolEnd;
-		iterator_t pathStart = std::find(hostStart, uriEnd, '/');
+        result.Host = uri.substr(hostStart - uri.begin(), hostEnd - hostStart);
 
-		iterator_t hostEnd = std::find(protocolEnd, (pathStart != uriEnd) ? pathStart : queryStart, ':');
+        if ((hostEnd != uriEnd) && (*hostEnd == ':')) {
+            ++hostEnd;
+            auto portEnd = (pathStart != uriEnd) ? pathStart : queryStart;
+            result.Port = uri.substr(hostEnd - uri.begin(), portEnd - hostEnd);
+        }
 
-		result.Host = make_string_view(uri, hostStart, hostEnd);
+        if (pathStart != uriEnd) result.Path = uri.substr(pathStart - uri.begin(), queryStart - pathStart);
+        if (queryStart != uriEnd) result.QueryString = uri.substr(queryStart - uri.begin(), uriEnd - queryStart);
 
-		if ((hostEnd != uriEnd) && ((&*(hostEnd))[0] == ':'))
-		{
-			++hostEnd;
-			iterator_t portEnd = (pathStart != uriEnd) ? pathStart : queryStart;
-			result.Port = make_string_view(uri, hostEnd, portEnd);
-		}
+        return result;
+    }
 
-		if (pathStart != uriEnd) result.Path = make_string_view(uri, pathStart, queryStart);
-
-		if (queryStart != uriEnd) result.QueryString = make_string_view(uri, queryStart, uri.end());
-
-		return result;
-	}
-
-	static std::string CreateUri(std::string_view Protocol, std::string_view Host, std::string_view Port, std::string_view Path, std::string_view QueryString)
-	{
-		std::ostringstream str;
-		if (!Protocol.empty())
-		{
-			str.write(Protocol.data(), Protocol.size());
-			str.write("://", 3);
-		}
-		str.write(Host.data(), Host.size());
-		if (!Port.empty())
-		{
-			str.write(":", 1);
-			str.write(Port.data(), Port.size());
-		}
-		if (!Path.empty())
-		{
-			str.write(Path.data(), Path.size());
-		}
-		if (!QueryString.empty())
-		{
-			str.write(QueryString.data(), QueryString.size());
-		}
-		return str.str();
-	}
-
-private:
-	static constexpr std::string_view make_string_view(const std::string_view& base, iterator_t first, iterator_t last)
-	{
-		return base.substr(std::distance(base.begin(), first), std::distance(first, last));
-	}
+    static std::string CreateUri(const std::string_view Protocol, const std::string_view Host, const std::string_view Port, const std::string_view Path, const std::string_view QueryString) {
+        std::string uri;
+        if (!Protocol.empty()) uri.append(Protocol).append("://");
+        uri.append(Host);
+        if (!Port.empty()) uri.append(":").append(Port);
+        if (!Path.empty()) uri.append(Path);
+        if (!QueryString.empty()) uri.append(QueryString);
+        return uri;
+    }
 };

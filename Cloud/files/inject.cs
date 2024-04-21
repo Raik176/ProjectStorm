@@ -2,10 +2,9 @@
 using System.Runtime.InteropServices;
 using System.Text;
 
-namespace CloudLauncher.files
+namespace CloudLauncher.Files
 {
-    class inject
-    {
+    class Inject {
         public static int InjectDll(int processId, string dllPath)
         {
             IntPtr hProcess = Win32.OpenProcess(1082, false, processId);
